@@ -3,11 +3,22 @@
 # ---------------------------------------------------------------------------- #
 FROM alpine/git:2.43.0 as download
 
+# Create LORA and embeddings directories
+RUN mkdir -p /LORA /embeddings
+
 # NOTE: CivitAI usually requires an API token, so you need to add it in the header
 #       of the wget command if you're using a model from CivitAI.
 RUN apk add --no-cache wget && \
-    wget -q -O /model.safetensors https://www.urbedigital.com.mx/nobackup/cyberrealisticPony_v85.safetensors 
-
+    wget -q -O /model.safetensors https://www.urbedigital.com.mx/nobackup/cyberrealisticPony_v85.safetensors && \
+    # Download embedding files
+    wget -q -O /embeddings/CyberRealistic_Negative_PONY-neg.safetensors https://www.urbedigital.com.mx/nobackup/embeddings/CyberRealistic_Negative_PONY-neg.safetensors && \
+    wget -q -O /embeddings/CyberRealisticPony_POSV1.safetensors https://www.urbedigital.com.mx/nobackup/embeddings/CyberRealisticPony_POSV1.safetensors && \
+    # Download LORA files
+    wget -q -O /LORA/4N4L.safetensors https://www.urbedigital.com.mx/nobackup/loras/4N4L.safetensors && \
+    wget -q -O /LORA/Breast_Size_Slider.safetensors https://www.urbedigital.com.mx/nobackup/loras/Breast_Size_Slider.safetensors && \
+    wget -q -O /LORA/Dramatic_Lighting_Slider.safetensors https://www.urbedigital.com.mx/nobackup/loras/Dramatic_Lighting_Slider.safetensors && \
+    wget -q -O /LORA/NippleSizeSlider_V1.safetensors https://www.urbedigital.com.mx/nobackup/loras/NippleSizeSlider_V1.safetensors && \
+    wget -q -O /LORA/Perfect_Booty_XL_V1.safetensors https://www.urbedigital.com.mx/nobackup/loras/Perfect_Booty_XL_V1.safetensors
 # ---------------------------------------------------------------------------- #
 #                        Stage 2: Build the final image                        #
 # ---------------------------------------------------------------------------- #
@@ -36,6 +47,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -c "from launch import prepare_environment; prepare_environment()" --skip-torch-cuda-test
 
 COPY --from=download /model.safetensors /model.safetensors
+COPY --from=download /LORA /stable-diffusion-webui/models/Lora
+COPY --from=download /embeddings /stable-diffusion-webui/embeddings
 
 # install dependencies
 COPY requirements.txt .
